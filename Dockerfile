@@ -1,9 +1,5 @@
-FROM alpine:latest AS extract
-
-RUN apk add --no-cache \
-        ca-certificates \
-        tzdata \
-    && update-ca-certificates
+ARG ALPINE_VERSION
+FROM alpine:${ALPINE_VERSION} AS extract
 
 COPY xteve_linux_amd64.tar.gz /source/
 
@@ -11,7 +7,8 @@ WORKDIR /source
 
 RUN tar xzf xteve_linux_amd64.tar.gz
 
-FROM scratch
+FROM alpine:${ALPINE_VERSION}
+
 ARG XTEVE_VERSION
 ARG XTEVE_COMMIT_REF
 ARG DOCKER_XTEVE_COMMIT_REF
@@ -28,8 +25,12 @@ LABEL org.label-schema.build-date="${BUILD_TIME}" \
       docker-build.ci-url="${BUILD_CI_URL}" \
       maintainer="tom@whi.tw"
 
-COPY --from=extract /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=extract /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        ffmpeg \
+        vlc \
+    && update-ca-certificates
 
 WORKDIR /xteve
 COPY --from=extract /source/xteve xteve

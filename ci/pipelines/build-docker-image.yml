@@ -13,6 +13,8 @@ jobs:
           trigger: true
         - get: xteve-downloads-repo
           trigger: true
+        - get: alpine-aports-tags
+          trigger: true
         - put: metadata
       - task: Extract Versions
         config:
@@ -21,6 +23,7 @@ jobs:
           inputs:
             - name: xteve-downloads-repo
             - name: docker-xteve-repo
+            - name: alpine-aports-tags
             - name: metadata
           outputs:
             - name: build-args
@@ -91,6 +94,16 @@ resources:
       branch: master
       private_key: |
         ((concourse-ssh-key.id_rsa))
+  - name: alpine-aports-tags
+    type: git-tags-resource
+    check_every: 6h
+    source:
+      repository_name: alpinelinux/aports
+      uri: git@github.com:alpinelinux/aports.git
+      tag_filter: "*.*.*"
+      LatestOnly: false
+      private_key: |
+        ((concourse-ssh-key.id_rsa))
   - name: docker-xteve-image
     type: docker-image
     icon: docker
@@ -115,3 +128,7 @@ resource_types:
     type: docker-image
     source:
       repository: olhtbr/metadata-resource
+  - name: git-tags-resource
+    type: docker-image
+    source:
+      repository: adgear/git-tags-resource
