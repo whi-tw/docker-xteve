@@ -1,0 +1,122 @@
+meta:
+  containers:
+    git-ssh: &git-ssh-image-resource
+      type: docker-image
+      source:
+        repository: governmentpaas/git-ssh
+        tag: ((git-ssh-tag))
+    jq: &ruby-image-resource
+      type: docker-image
+      source:
+        repository: ruby
+        tag: 2.6.5-alpine3.10
+jobs:
+  - name: Build
+    plan:
+      - in_parallel:
+        - get: docker-xteve-repo
+          trigger: true
+        - get: xteve-downloads-repo
+          trigger: true
+        - get: metadata
+      - task: Extract Versions
+        config:
+          platform: linux
+          image_resource: *ruby-image-resource
+          inputs:
+            - name: xteve-downloads-repo
+            - name: docker-xteve-repo
+            - name: metadata
+          outputs:
+            - name: build-args
+            - name: tag
+          run:
+            path: sh
+            args:
+              - -e
+              - -c
+              - |
+                ruby docker-xteve-repo/ci/scripts/build-args.rb | tee build-args/build-args.json
+                ruby docker-xteve-repo/ci/scripts/tag.rb | tee tag/tag
+      - task: Do the Truffle Shuffle
+        config:
+          platform: linux
+          image_resource: *ruby-image-resource
+          inputs:
+            - name: xteve-downloads-repo
+            - name: docker-xteve-repo
+          outputs:
+            - name: docker-build-dir
+          run:
+            path: sh
+            args:
+              - -e
+              - -c
+              - |
+                cp xteve-downloads-repo/xteve_linux_amd64.tar.gz docker-build-dir/
+                cp docker-xteve-repo/Dockerfile docker-build-dir/
+      - task: Print some things for verification
+        config:
+          platform: linux
+          image_resource: *ruby-image-resource
+          inputs:
+            - name: docker-build-dir
+          run:
+            path: sh
+            args:
+              - -e
+              - -c
+              - |
+                echo "## Printing the SHA256 checksum of xteve_linux_amd64.tar.gz"
+                sha256sum docker-build-dir/xteve_linux_amd64.tar.gz
+                echo "## Printing the Dockerfile that will be used for this build"
+                cat docker-build-dir/Dockerfile
+      - put: docker-xteve-image
+        params:
+          build: docker-build-dir
+          build_args_file: build-args/build-args.json
+          tag_file: tag/tag
+          tag_as_latest: true
+      - put: microbadger-webhook
+
+resources:
+  - name: docker-xteve-repo
+    type: git
+    icon: git
+    source:
+      uri: git@github.com:whi-tw/docker-xteve.git
+      branch: master
+      private_key: |
+        ((concourse-ssh-key.id_rsa))
+  - name: xteve-downloads-repo
+    type: git
+    icon: git
+    source:
+      uri: git@github.com:xteve-project/xTeVe-Downloads.git
+      branch: master
+      private_key: |
+        ((concourse-ssh-key.id_rsa))
+  - name: docker-xteve-image
+    type: docker-image
+    icon: docker
+    source:
+      repository: tnwhitwell/xteve
+      username: ((docker-hub.username))
+      password: ((docker-hub.password))
+  - name: microbadger-webhook
+    type: concourse-http-resource
+    source:
+      url: https://hooks.microbadger.com/images/tnwhitwell/xteve/_OzHj6z05iHNUjKZsCmOW62x0IE=
+      method: "POST"
+  - name: metadata
+    type: metadata
+
+resource_types:
+  - name: concourse-http-resource
+    type: docker-image
+    source:
+      repository: edtan1/concourse-http-resource
+  - name: metadata
+    type: docker-image
+    source:
+      repository: olhtbr/metadata-resource
