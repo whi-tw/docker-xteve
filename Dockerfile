@@ -2,7 +2,8 @@ FROM alpine:latest AS extract
 
 RUN apk add --no-cache \
         ca-certificates \
-        tzdata
+        tzdata \
+    && update-ca-certificates
 
 COPY xteve_linux_amd64.tar.gz /source/
 
