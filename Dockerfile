@@ -18,11 +18,12 @@ ARG DOCKER_XTEVE_COMMIT_REF
 ARG BUILD_TIME
 ARG BUILD_CI_URL
 
-LABEL org.label-schema.build-date=${BUILD_TIME} \
-      org.label-schema.vcs-ref=${XTEVE_COMMIT_REF} \
+LABEL org.label-schema.build-date="${BUILD_TIME}" \
+      org.label-schema.vcs-ref="${XTEVE_COMMIT_REF}" \
       org.label-schema.vcs-url="https://github.com/xteve-project/xTeVe-Downloads" \
+      org.label-schema.version="${XTEVE_VERSION}" \
       org.label-schema.schema-version="1.0" \
-      docker-build.vcs-ref=${DOCKER_XTEVE_COMMIT_REF} \
+      docker-build.vcs-ref="${DOCKER_XTEVE_COMMIT_REF}" \
       docker-build.vcs-url="https://github.com/whi-tw/docker-xteve" \
       docker-build.ci-url="${BUILD_CI_URL}" \
       maintainer="tom@whi.tw"
