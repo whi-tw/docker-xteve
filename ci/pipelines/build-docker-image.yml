@@ -6,8 +6,14 @@ meta:
         repository: ruby
         tag: 2.6.5-alpine3.10
 jobs:
-  - name: Build
-    public: true
+  - name: weekly-timer
+    plan:
+      - get: every-saturday-midnight
+        trigger: true
+      - put: pipeline-trigger
+        params: {bump: patch}
+
+  - name: Trigger
     plan:
       - in_parallel:
         - get: docker-xteve-repo
@@ -15,6 +21,23 @@ jobs:
         - get: xteve-downloads-repo
           trigger: true
         - get: alpine-aports-tags
+          trigger: true
+        - put: pipeline-trigger
+          params: {bump: patch}
+  - name: Build
+    public: true
+    plan:
+      - in_parallel:
+        - get: docker-xteve-repo
+          passed: [Trigger]
+          trigger: true
+        - get: xteve-downloads-repo
+          passed: [Trigger]
+          trigger: true
+        - get: alpine-aports-tags
+          passed: [Trigger]
+          trigger: true
+        - get: pipeline-trigger
           trigger: true
         - put: metadata
       - task: Extract Versions
@@ -95,6 +118,28 @@ resources:
       branch: master
       private_key: |
         ((concourse-ssh-key.id_rsa))
+  - name: pipeline-trigger
+    icon: check
+    type: semver
+    source: &version-repo-source
+      driver: git
+      uri: git@github.com:whi-tw/docker-xteve.git
+      branch: pipeline-trigger
+      private_key: |
+        ((concourse-ssh-key.id_rsa))
+      file: pipeline-trigger
+      git_user: "Concourse <concourse@whitwell.dev>"
+      initial_version: 0.0.0
+
+  - name: every-saturday-midnight
+    type: time
+    icon: alarm
+    source:
+      start: "00:00"
+      stop: "00:00"
+      location: Europe/London
+      days: [Saturday]
+
   - name: xteve-downloads-repo
     type: git
     icon: git
