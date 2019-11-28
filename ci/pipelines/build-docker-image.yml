@@ -1,6 +1,6 @@
 meta:
   containers:
-    jq: &ruby-image-resource
+    ruby: &ruby-image-resource
       type: docker-image
       source:
         repository: ruby
@@ -146,7 +146,7 @@ resources:
     icon: alarm
     source:
       start: "00:00"
-      stop: "00:00"
+      stop: "01:00"
       location: Europe/London
       days: [Saturday]
 
