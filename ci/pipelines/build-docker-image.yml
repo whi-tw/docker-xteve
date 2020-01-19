@@ -21,35 +21,35 @@ jobs:
       - get: every-saturday-midnight
         trigger: true
       - put: pipeline-trigger
-        params: {bump: patch}
+        params: { bump: patch }
 
   - name: Trigger
     plan:
       - in_parallel:
-        - get: docker-xteve-repo
-          trigger: true
-        - get: xteve-downloads-repo
-          trigger: true
-        - get: alpine-aports-tags
-          trigger: true
-        - put: pipeline-trigger
-          params: {bump: patch}
+          - get: docker-xteve-repo
+            trigger: true
+          - get: xteve-downloads-repo
+            trigger: true
+          - get: alpine-release-feed
+            trigger: true
+          - put: pipeline-trigger
+            params: { bump: patch }
   - name: Build
     public: true
     plan:
       - in_parallel:
-        - get: docker-xteve-repo
-          passed: [Trigger]
-          trigger: true
-        - get: xteve-downloads-repo
-          passed: [Trigger]
-          trigger: true
-        - get: alpine-aports-tags
-          passed: [Trigger]
-          trigger: true
-        - get: pipeline-trigger
-          trigger: true
-        - put: metadata
+          - get: docker-xteve-repo
+            passed: [Trigger]
+            trigger: true
+          - get: xteve-downloads-repo
+            passed: [Trigger]
+            trigger: true
+          - get: alpine-release-feed
+            passed: [Trigger]
+            trigger: true
+          - get: pipeline-trigger
+            trigger: true
+          - put: metadata
       - task: Extract Versions
         config:
           platform: linux
@@ -57,7 +57,7 @@ jobs:
           inputs:
             - name: xteve-downloads-repo
             - name: docker-xteve-repo
-            - name: alpine-aports-tags
+            - name: alpine-release-feed
             - name: metadata
           outputs:
             - name: build-args
@@ -128,6 +128,7 @@ resources:
       branch: master
       private_key: |
         ((concourse-ssh-key.id_rsa))
+
   - name: pipeline-trigger
     icon: check
     type: semver
@@ -158,16 +159,14 @@ resources:
       branch: master
       private_key: |
         ((concourse-ssh-key.id_rsa))
-  - name: alpine-aports-tags
-    type: git-tags-resource
+
+  - name: alpine-release-feed
+    type: rss-resource
+    icon: rss
     check_every: 6h
     source:
-      repository_name: alpinelinux/aports
-      uri: git@github.com:alpinelinux/aports.git
-      tag_filter: "*.*.*"
-      LatestOnly: false
-      private_key: |
-        ((concourse-ssh-key.id_rsa))
+      url: "https://docker-hub-rss.now.sh/_/alpine.atom?excludeRegex=latest.*"
+
   - name: docker-xteve-image
     type: docker-image
     icon: docker
@@ -175,11 +174,13 @@ resources:
       repository: tnwhitwell/xteve
       username: ((docker-hub.username))
       password: ((docker-hub.password))
+
   - name: microbadger-webhook
     type: concourse-http-resource
     source:
       url: https://hooks.microbadger.com/images/tnwhitwell/xteve/_OzHj6z05iHNUjKZsCmOW62x0IE=
       method: "POST"
+
   - name: metadata
     type: metadata
 
@@ -192,7 +193,8 @@ resource_types:
     type: docker-image
     source:
       repository: olhtbr/metadata-resource
-  - name: git-tags-resource
+  - name: rss-resource
     type: docker-image
     source:
-      repository: adgear/git-tags-resource
+      repository: tnwhitwell/concourse-rss-resource
+      tag: latest

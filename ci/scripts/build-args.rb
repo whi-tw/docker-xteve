@@ -16,7 +16,7 @@ def generate_build_arg_hash()
   now = Time.now.utc
 
   {
-    "ALPINE_VERSION" => file_to_string("alpine-aports-tags/.git/tag")[/[0-9]+\.[0-9]+\.[0-9]+/],
+    "ALPINE_VERSION" => file_to_string("alpine-release-feed/title")[/[0-9]+\.[0-9]+\.[0-9]+/],
     "BUILD_TIME" => now.strftime("%Y-%m-%dT%H:%M:%SZ"),
     "BUILD_CI_URL" => "#{atc_external_url}/teams/#{build_team_name}/pipelines/#{build_pipeline_name}/jobs/#{build_job_name}/builds/#{build_name}",
     "DOCKER_XTEVE_COMMIT_REF" => file_to_string("docker-xteve-repo/.git/ref"),
