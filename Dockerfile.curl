@@ -1,0 +1,4 @@
+ARG XTEVE_TAG
+FROM tnwhitwell/xteve:${XTEVE_TAG}
+
+RUN apk add --no-cache curl

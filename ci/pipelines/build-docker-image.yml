@@ -70,7 +70,11 @@ jobs:
               - -c
               - |
                 ruby docker-xteve-repo/ci/scripts/build-args.rb | tee build-args/build-args.json
-                ruby docker-xteve-repo/ci/scripts/tag.rb | tee tag/tag
+                TAG=$(ruby docker-xteve-repo/ci/scripts/tag.rb)
+                echo "${TAG}" | tee tag/tag
+                ruby docker-xteve-repo/ci/scripts/build-args-curl.rb | tee build-args/build-args-curl.json
+                echo "${TAG}-curl" | tee tag/tag-curl
+                echo "latest-curl" | tee tag/tag-curl-latest
       - task: Do the Truffle Shuffle
         config:
           platform: linux
@@ -88,7 +92,7 @@ jobs:
               - -c
               - |
                 cp xteve-downloads-repo/xteve_linux_amd64.tar.gz docker-build-dir/
-                cp docker-xteve-repo/Dockerfile docker-build-dir/
+                cp docker-xteve-repo/Dockerfile* docker-build-dir/
       - task: Print some things for verification
         config:
           platform: linux
@@ -117,6 +121,14 @@ jobs:
           build_args_file: build-args/build-args.json
           tag_file: tag/tag
           tag_as_latest: true
+      - put: docker-xteve-image
+        params:
+          build: docker-build-dir
+          build_args_file: build-args/build-args-curl.json
+          dockerfile: docker-build-dir/Dockerfile.curl
+          tag_file: tag/tag-curl
+          additional_tags: tag/tag-curl-latest
+          tag_as_latest: false
       - put: microbadger-webhook
 
 resources:
