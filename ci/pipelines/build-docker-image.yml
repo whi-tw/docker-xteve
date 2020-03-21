@@ -177,7 +177,7 @@ resources:
     icon: rss
     check_every: 6h
     source:
-      url: "https://docker-hub-rss.now.sh/_/alpine.atom?excludeRegex=latest.*"
+      url: "https://docker-hub-rss.now.sh/_/alpine.atom?exclude=latest%2Cedge&includeRegex=%5B0-9%5D%2B%5C.%5B0-9%5D%2B%5C.%3F%5B0-9%5D%3F"
 
   - name: docker-xteve-image
     type: docker-image
