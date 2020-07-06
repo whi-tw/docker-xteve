@@ -32,6 +32,8 @@ services:
 
 By default, the process runs as user `root:root`. It is recommended to change this using the `-u UID:GID` option in the docker run command, or with `user: UID:GID` in a docker-compose file.
 
+The timezone of the container can be changed by setting an env var `TZ` with the [timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) eg. `-e TZ=Europe/Paris`.
+
 Documentation for xteve itself can be [found on its github page](https://github.com/xteve-project/xTeVe-Documentation/blob/master/en/configuration.md). ffmpeg and cvlc are available within the docker image, so they can be used as buffers.
 
 ## Source
