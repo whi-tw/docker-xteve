@@ -28,7 +28,7 @@ jobs:
       - in_parallel:
           - get: docker-xteve-repo
             trigger: true
-          - get: xteve-downloads-repo
+          - get: xteve-repo
             trigger: true
           - get: alpine-release-feed
             trigger: true
@@ -41,7 +41,7 @@ jobs:
           - get: docker-xteve-repo
             passed: [Trigger]
             trigger: true
-          - get: xteve-downloads-repo
+          - get: xteve-repo
             passed: [Trigger]
             trigger: true
           - get: alpine-release-feed
@@ -55,7 +55,7 @@ jobs:
           platform: linux
           image_resource: *ruby-image-resource
           inputs:
-            - name: xteve-downloads-repo
+            - name: xteve-repo
             - name: docker-xteve-repo
             - name: alpine-release-feed
             - name: metadata
@@ -80,7 +80,7 @@ jobs:
           platform: linux
           image_resource: *ruby-image-resource
           inputs:
-            - name: xteve-downloads-repo
+            - name: xteve-repo
             - name: docker-xteve-repo
           outputs:
             - name: docker-build-dir
@@ -91,7 +91,7 @@ jobs:
               - -x
               - -c
               - |
-                cp xteve-downloads-repo/xteve_linux_amd64.tar.gz docker-build-dir/
+                cp -a xteve-repo docker-build-dir/
                 cp docker-xteve-repo/Dockerfile* docker-build-dir/
       - task: Print some things for verification
         config:
@@ -109,8 +109,6 @@ jobs:
               - -x
               - -c
               - |
-                echo "## SHA256 checksum of xteve_linux_amd64.tar.gz"
-                sha256sum docker-build-dir/xteve_linux_amd64.tar.gz
                 echo "## Docker Build args for this build"
                 cat build-args/build-args.json
                 echo "## Dockerfile that will be used for this build"
@@ -167,12 +165,13 @@ resources:
       location: Europe/London
       days: [Saturday]
 
-  - name: xteve-downloads-repo
+  - name: xteve-repo
     type: git
     icon: git
     source:
-      uri: git@github.com:xteve-project/xTeVe-Downloads.git
+      uri: git@github.com:xteve-project/xTeVe.git
       branch: master
+      tag_filter: "*.*"
       private_key: |
         ((concourse-ssh-key.id_rsa))
 
