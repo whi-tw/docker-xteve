@@ -117,13 +117,17 @@ jobs:
                 cat docker-build-dir/Dockerfile
       - put: docker-xteve-image
         params:
+          tags: ["qemu"]
           build: docker-build-dir
+          buildx_platforms: "linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8"
           build_args_file: build-args/build-args.json
           tag_file: tag/tag
           tag_as_latest: true
       - put: docker-xteve-image
         params:
+          tags: ["qemu"]
           build: docker-build-dir
+          buildx_platforms: "linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8"
           build_args_file: build-args/build-args-curl.json
           dockerfile: docker-build-dir/Dockerfile.curl
           tag_file: tag/tag-curl
@@ -180,7 +184,7 @@ resources:
       url: "https://docker-hub-rss.now.sh/_/alpine.atom?exclude=latest%2Cedge&includeRegex=%5B0-9%5D%2B%5C.%5B0-9%5D%2B%5C.%3F%5B0-9%5D%3F"
 
   - name: docker-xteve-image
-    type: docker-image
+    type: docker-buildx-builder
     icon: docker
     source:
       repository: tnwhitwell/xteve
@@ -197,6 +201,12 @@ resources:
     type: metadata
 
 resource_types:
+  - name: docker-buildx-builder
+    type: docker-image
+    privileged: true
+    source:
+      repository: tnwhitwell/docker-buildx-resource
+      tag: latest
   - name: concourse-http-resource
     type: docker-image
     source:
